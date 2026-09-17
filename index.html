@@ -68,19 +68,19 @@ button,input,select,textarea{font:inherit;color:inherit}button{cursor:pointer}.a
 </div>
 <script>
 const PRESETS={
-"Ghost Moan — Deep":{name:"Deep Ghost Moan",duration_seconds:5,master:{volume:.82,fade_in:.08,fade_out:.6},layers:[{type:"ghost_moan",volume:.72,pitch:225,speed:.72,echo:.28,pan:0,randomness:.12}]},
-"Owl — Night Hoot":{name:"Night Owl Hoot",duration_seconds:4.6,master:{volume:.88,fade_in:.03,fade_out:.35},layers:[{type:"owl",volume:.68,pitch:430,speed:.92,echo:.08,pan:0,randomness:.08}]},
-"Wind — Dark":{name:"Dark Wind",duration_seconds:8,master:{volume:.82,fade_in:.7,fade_out:1},layers:[{type:"wind",volume:.24,darkness:.78,gust_speed:.12,randomness:.18},{type:"rumble",frequency:36,volume:.08}]},
-"Heartbeat — Close":{name:"Close Heartbeat",duration_seconds:8,master:{volume:.85,fade_in:.25,fade_out:.5},layers:[{type:"heartbeat",bpm:44,volume:.58,depth:.9,randomness:.08}]},
+"Deep Ghost":{name:"Deep Ghost",duration_seconds:5,master:{volume:.82,fade_in:.08,fade_out:.6},layers:[{type:"ghost_moan",volume:.72,pitch:225,speed:.72,echo:.28,pan:0,randomness:.12}]},
+"Night Owl":{name:"Night Owl",duration_seconds:4.6,master:{volume:.88,fade_in:.03,fade_out:.35},layers:[{type:"owl",volume:.68,pitch:430,speed:.92,echo:.08,pan:0,randomness:.08}]},
+"Dark Wind":{name:"Dark Wind",duration_seconds:8,master:{volume:.82,fade_in:.7,fade_out:1},layers:[{type:"wind",volume:.24,darkness:.78,gust_speed:.12,randomness:.18},{type:"rumble",frequency:36,volume:.08}]},
+"Close Heartbeat":{name:"Close Heartbeat",duration_seconds:8,master:{volume:.85,fade_in:.25,fade_out:.5},layers:[{type:"heartbeat",bpm:44,volume:.58,depth:.9,randomness:.08}]},
 "Alien":{name:"Alien",duration_seconds:7.5,master:{volume:.9,fade_in:.05,fade_out:.25},layers:[{type:"alien_scan",rate:.72,volume:.48,pitch:680,depth:.78,echo:.08,pan:0,randomness:.08}]},
-"Thunder — Distant":{name:"Distant Thunder",duration_seconds:8,master:{volume:.86,fade_in:.05,fade_out:.8},layers:[{type:"thunder",start:1.5,volume:.72,depth:.9,echo:.08}]},
+"Distant Thunder":{name:"Distant Thunder",duration_seconds:8,master:{volume:.86,fade_in:.05,fade_out:.8},layers:[{type:"thunder",start:1.5,volume:.72,depth:.9,echo:.08}]},
 "Evil Presence":{name:"Evil Presence",duration_seconds:3.2,master:{volume:.92,fade_in:.03,fade_out:.28},layers:[{type:"creak",start:.28,volume:.72,pitch:185,duration:2.15,depth:.82,echo:.02,randomness:.16}]},
-"Knock — Hollow":{name:"Hollow Knock",duration_seconds:3,master:{volume:.9,fade_in:.05,fade_out:.4},layers:[{type:"knock",start:.5,count:3,spacing:.58,frequency:67,volume:.7,echo:.12}]},
-"Drip — Echo":{name:"Water Drip",duration_seconds:4,master:{volume:.9,fade_in:.05,fade_out:.5},layers:[{type:"drip",start:.45,count:4,spacing:.82,frequency:1200,volume:.55,echo:.24,randomness:.12}]},
-"Clock — Tick":{name:"Clock Tick",duration_seconds:5,master:{volume:.9,fade_in:.05,fade_out:.3},layers:[{type:"tick",start:.2,count:5,spacing:1,frequency:1600,volume:.45,randomness:.03}]},
+"Hollow Knock":{name:"Hollow Knock",duration_seconds:3,master:{volume:.9,fade_in:.05,fade_out:.4},layers:[{type:"knock",start:.5,count:3,spacing:.58,frequency:67,volume:.7,echo:.12}]},
+"Echoing Drip":{name:"Echoing Drip",duration_seconds:4,master:{volume:.9,fade_in:.05,fade_out:.5},layers:[{type:"drip",start:.45,count:4,spacing:.82,frequency:1200,volume:.55,echo:.24,randomness:.12}]},
+"Clock Tick":{name:"Clock Tick",duration_seconds:5,master:{volume:.9,fade_in:.05,fade_out:.3},layers:[{type:"tick",start:.2,count:5,spacing:1,frequency:1600,volume:.45,randomness:.03}]},
 "Electric Buzz":{name:"Electric Buzz",duration_seconds:5,master:{volume:.85,fade_in:.2,fade_out:.5},layers:[{type:"buzz",frequency:60,volume:.25,depth:.65,randomness:.08}]},
 "Low Rumble":{name:"Low Rumble",duration_seconds:7,master:{volume:.86,fade_in:.8,fade_out:1},layers:[{type:"rumble",frequency:38,volume:.2,depth:.8,randomness:.08}]},
-"Custom — Reference":{name:"Custom Reference",duration_seconds:5,master:{volume:.85,fade_in:.08,fade_out:.25},layers:[{type:"custom",waveform:"saw",frequency:180,end_frequency:720,harmonics:[1,.5,.2],noise_mix:.12,attack:.06,release:.35,tremolo_rate:3.2,tremolo_depth:.18,pulse_rate:2.4,pulse_depth:.2,highpass:80,lowpass:2200,volume:.5,pan:0,echo:.05}]},
+"Custom Sound":{name:"Custom Sound",duration_seconds:5,master:{volume:.85,fade_in:.08,fade_out:.25},layers:[{type:"custom",waveform:"saw",frequency:180,end_frequency:720,harmonics:[1,.5,.2],noise_mix:.12,attack:.06,release:.35,tremolo_rate:3.2,tremolo_depth:.18,pulse_rate:2.4,pulse_depth:.2,highpass:80,lowpass:2200,volume:.5,pan:0,echo:.05}]},
 };
 let recipe=structuredClone(PRESETS[Object.keys(PRESETS)[0]]), rendered=null, audioCtx=null, source=null;
 const $=s=>document.querySelector(s), preset=$('#preset'), controls=$('#controls'), editor=$('#jsonEditor');
