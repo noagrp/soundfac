@@ -1,6 +1,6 @@
 {
-  "name": "SoundLab",
-  "short_name": "SoundLab",
+  "name": "soundfac",
+  "short_name": "soundfac",
   "description": "Browser-based sound effect generator and JSON sound-recipe editor.",
   "start_url": "./",
   "scope": "./",
