@@ -165,7 +165,7 @@ $('#saveWavBtn').onclick=()=>{if(!rendered)$('#generateBtn').click();if(rendered
 $('#saveRecipeBtn').onclick=()=>download(new Blob([JSON.stringify(recipe,null,2)],{type:'application/json'}),(recipe.name||'soundfac').replace(/[^a-z0-9_-]+/gi,'_')+'.json');
 $('#randomizeBtn').onclick=()=>{const walk=o=>{for(const k in o){const v=o[k];if(v&&typeof v==='object')walk(v);else if(typeof v==='number'&&['volume','pitch','frequency','bpm','rate','speed','spacing','echo','randomness','darkness','depth','gust_speed'].includes(k)){const amt=['volume','echo','randomness','darkness','depth'].includes(k)?.12:.08;o[k]=Math.max(0,+(v*(1+(Math.random()-.5)*2*amt)).toFixed(3))}}};walk(recipe);buildControls();rendered=null;clearWave()};
 window.addEventListener('resize',()=>{if(rendered)drawWave(rendered)});
-if('serviceWorker'in navigator)navigator.serviceWorker.register('./service-worker.js').catch(()=>{});
+if('serviceWorker'in navigator)navigator.serviceWorker.register('./service-worker.js',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{});
 setRecipe(recipe);
 </script>
 </body>
