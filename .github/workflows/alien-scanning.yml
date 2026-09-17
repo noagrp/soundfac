@@ -1,0 +1,41 @@
+name: Convert Breathing to Alien Scanning
+on:
+  push:
+    paths:
+      - '.github/workflows/alien-scanning.yml'
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Update preset and synth
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          old='"Breathing — Distant":{name:"Distant Breathing",duration_seconds:9,master:{volume:.92,fade_in:.12,fade_out:.35},layers:[{type:"breathing",rate:.24,volume:.46,darkness:.58,echo:0,pan:0,randomness:.06}]}'
+          new='"Alien Scanning":{name:"Alien Scanning",duration_seconds:7.5,master:{volume:.9,fade_in:.05,fade_out:.25},layers:[{type:"alien_scan",rate:.72,volume:.48,pitch:680,depth:.78,echo:.08,pan:0,randomness:.08}]}'
+          if old not in s:
+              raise SystemExit('old breathing preset not found')
+          s=s.replace(old,new)
+          old2="else if(type==='breathing'){const raw=noise(),air=bp(raw,650,3600,sr),rate=Math.max(.10,def.rate??.24),dark=def.darkness??.58,period=1/rate;for(let i=0;i<n;i++){const t=i/sr,ph=(t%period)/period;let env=0,voiced=0;if(ph<.20){const x=ph/.20;env=Math.pow(Math.sin(Math.PI*x),1.6)*.42}else if(ph<.30){env=0}else if(ph<.60){const x=(ph-.30)/.30;env=Math.pow(Math.sin(Math.PI*x),1.25)*.72;voiced=Math.sin(2*Math.PI*128*t)*.055*Math.pow(Math.sin(Math.PI*x),1.4)}else env=0;const mouth=Math.sin(2*Math.PI*255*t+.35*Math.sin(2*Math.PI*3.1*t))*.022*env;const texture=air[i]*env*(.14+.05*(1-dark));y[i]=(texture+voiced+mouth)*v*(1+(R()-.5)*rand*.04)}}"
+          new2="else if(type==='alien_scan'||type==='scanner'){const base=def.pitch??680,rate=Math.max(.15,def.rate??.72),depth=def.depth??.78;let ph1=0,ph2=0;for(let i=0;i<n;i++){const t=i/sr,cycle=(t*rate)%1,sweep=cycle<.72?cycle/.72:1-(cycle-.72)/.28;const gate=cycle<.76?Math.pow(Math.sin(Math.PI*Math.min(1,cycle/.76)),1.15):0;const f=base*(.72+.75*sweep)+34*Math.sin(2*Math.PI*3.7*t)+(R()-.5)*rand*26;ph1+=2*Math.PI*f/sr;ph2+=2*Math.PI*(f*1.51)/sr;const ping=Math.pow(Math.max(0,Math.sin(2*Math.PI*rate*t)),10)*.22;const digital=.68*Math.sin(ph1)+.22*Math.sin(ph2)+.10*Math.sign(Math.sin(ph1*.5));y[i]=(digital*gate*.38+ping)*v*depth}}"
+          if old2 not in s:
+              raise SystemExit('old breathing synth not found')
+          s=s.replace(old2,new2)
+          s=s.replace('breathing:dur-at,oscillator:dur-at', 'alien_scan:dur-at,scanner:dur-at,oscillator:dur-at')
+          p.write_text(s)
+          sw=Path('service-worker.js')
+          w=sw.read_text().replace("const CACHE='soundfac-v8';","const CACHE='soundfac-v9';")
+          sw.write_text(w)
+          PY
+      - name: Commit
+        run: |
+          git config user.name "noagrp"
+          git config user.email "actions@users.noreply.github.com"
+          git add index.html service-worker.js
+          git commit -m "Replace breathing preset with alien scanning" || exit 0
+          git push
