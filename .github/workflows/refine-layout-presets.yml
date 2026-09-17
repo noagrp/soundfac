@@ -1,0 +1,34 @@
+name: Refine SoundFac Layout Presets
+on:
+  push:
+    paths:
+      - '.github/workflows/refine-layout-presets.yml'
+permissions:
+  contents: write
+jobs:
+  refine:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Stack layout and simplify presets
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          s=s.replace('.grid{display:grid;grid-template-columns:minmax(300px,.85fr) minmax(360px,1.15fr);gap:16px}', '.grid{display:grid;grid-template-columns:1fr;gap:16px}')
+          s=s.replace('.controls{display:flex;flex-direction:column;gap:8px;width:100%;max-height:64vh;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scrollbar-gutter:stable;padding-right:8px;min-width:0}', '.controls{display:flex;flex-direction:column;gap:8px;width:100%;max-height:68vh;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scrollbar-gutter:stable;padding:0 8px 8px 0;min-width:0}')
+          s=s.replace('@media(max-width:820px){.app{padding:12px}.grid{grid-template-columns:1fr}.top{align-items:flex-start}.status{display:none}.controls{max-height:54vh;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}', '@media(max-width:820px){.app{padding:12px}.top{align-items:flex-start}.status{display:none}.controls{max-height:62vh;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}')
+          s=s.replace('"Door Creak":{name:"Door Creak",duration_seconds:3.2,master:{volume:.92,fade_in:.03,fade_out:.28},layers:[{type:"creak",start:.28,volume:.72,pitch:185,duration:2.15,depth:.82,echo:.02,randomness:.16}]}', '"Evil Presence":{name:"Evil Presence",duration_seconds:3.2,master:{volume:.92,fade_in:.03,fade_out:.28},layers:[{type:"creak",start:.28,volume:.72,pitch:185,duration:2.15,depth:.82,echo:.02,randomness:.16}]}')
+          multi='\n"Haunted Night — Multi-layer":{name:"Haunted Night",duration_seconds:12,master:{volume:.78,fade_in:.8,fade_out:1.3},layers:[{type:"wind",volume:.14,darkness:.8,gust_speed:.08,randomness:.18},{type:"rumble",frequency:34,volume:.06},{type:"breathing",rate:.11,volume:.055,darkness:.75}],events:[{time:4.5,type:"owl",volume:.32,pitch:218,speed:.68,echo:.25,pan:-.25},{time:8.1,type:"thunder",volume:.35,depth:.75,echo:.12}]}'
+          s=s.replace(multi,'')
+          s=s.replace('Paste a simple preset or a multi-layer recipe.', 'Paste a sound recipe.')
+          p.write_text(s)
+          PY
+      - name: Commit
+        run: |
+          git config user.name "noagrp"
+          git config user.email "actions@users.noreply.github.com"
+          git add index.html
+          git commit -m "Stack SoundFac layout and simplify presets" || exit 0
+          git push
