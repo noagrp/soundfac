@@ -1,0 +1,47 @@
+name: Refine SoundFac Breathing Owl
+on:
+  push:
+    paths:
+      - '.github/workflows/refine-breathing-owl.yml'
+permissions:
+  contents: write
+jobs:
+  refine:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Refine sounds
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          s=s.replace('"Owl — Deep Horror":{name:"Deep Owl",duration_seconds:5,master:{volume:.82,fade_in:.08,fade_out:.6},layers:[{type:"owl",volume:.75,pitch:225,speed:.72,echo:.28,pan:0,randomness:.12}]},', '"Ghost Moan — Deep":{name:"Deep Ghost Moan",duration_seconds:5,master:{volume:.82,fade_in:.08,fade_out:.6},layers:[{type:"ghost_moan",volume:.72,pitch:225,speed:.72,echo:.28,pan:0,randomness:.12}]},\n"Owl — Night Hoot":{name:"Night Owl Hoot",duration_seconds:4.6,master:{volume:.88,fade_in:.03,fade_out:.35},layers:[{type:"owl",volume:.68,pitch:430,speed:.92,echo:.08,pan:0,randomness:.08}]},')
+          s=s.replace('"Breathing — Distant":{name:"Distant Breathing",duration_seconds:8,master:{volume:.9,fade_in:.5,fade_out:.8},layers:[{type:"breathing",rate:.12,volume:.32,darkness:.75,echo:.05,pan:0,randomness:.16}]}', '"Breathing — Distant":{name:"Distant Breathing",duration_seconds:9,master:{volume:.9,fade_in:.25,fade_out:.5},layers:[{type:"breathing",rate:.22,volume:.32,darkness:.68,echo:.02,pan:0,randomness:.08}]}')
+          old="""else if(type==='breathing'){let a=bp(noise(),90,1500,sr),rate=def.rate??.14,dark=def.darkness??.7;for(let i=0;i<n;i++){const t=i/sr,cy=Math.pow(.5+.5*Math.sin(2*Math.PI*rate*t-1),2.7);y[i]=a[i]*cy*v*(.75+.25*dark)}}\n else if(type==='owl'||type==='owl_hoot'){const base=def.pitch??225,speed=def.speed??.75,events=[[.05,1.25,0],[2.0/speed,.7,-18],[3.0/speed,.85,3]];for(const [st0,len0,df] of events){const st=Math.floor(st0*sr),len=Math.floor(len0/speed*sr);let ph=0;for(let j=0;j<len&&st+j<n;j++){const t=j/sr,f=base+df+2*Math.sin(2*Math.PI*3.8*t)+4-18*j/len+(R()-.5)*rand*5;ph+=2*Math.PI*f/sr;const env=Math.pow(Math.sin(Math.PI*j/len),1.7);y[st+j]+=(.8*Math.sin(ph)+.16*Math.sin(2*ph+.2)+.04*Math.sin(3*ph))*env*v}}}"""
+          new="""else if(type==='breathing'){let a=bp(noise(),180,2200,sr),rate=Math.max(.08,def.rate??.22),dark=def.darkness??.68,period=1/rate;for(let i=0;i<n;i++){const t=i/sr,ph=(t%period)/period;let env=0;if(ph<.34){const x=ph/.34;env=Math.pow(Math.sin(Math.PI*x),1.35)*.72}else if(ph<.78){const x=(ph-.34)/.44;env=Math.pow(Math.sin(Math.PI*x),1.15)}else env=0;const chest=.035*Math.sin(2*Math.PI*115*t)*(env>.02?env:0);y[i]=(a[i]*env*v*(.46+.22*(1-dark))+chest*v)*(1+(R()-.5)*rand*.08)}}\n else if(type==='ghost_moan'||type==='moan'){const base=def.pitch??225,speed=def.speed??.75,events=[[.05,1.25,0],[2.0/speed,.7,-18],[3.0/speed,.85,3]];for(const [st0,len0,df] of events){const st=Math.floor(st0*sr),len=Math.floor(len0/speed*sr);let ph=0;for(let j=0;j<len&&st+j<n;j++){const t=j/sr,f=base+df+2*Math.sin(2*Math.PI*3.8*t)+4-18*j/len+(R()-.5)*rand*5;ph+=2*Math.PI*f/sr;const env=Math.pow(Math.sin(Math.PI*j/len),1.7);y[st+j]+=(.8*Math.sin(ph)+.16*Math.sin(2*ph+.2)+.04*Math.sin(3*ph))*env*v}}}\n else if(type==='owl'||type==='owl_hoot'){const base=def.pitch??430,speed=Math.max(.45,def.speed??.92),calls=[[.18,.62,0],[1.48,.38,-34],[2.02,.44,-18]];for(const [st0,len0,df] of calls){const st=Math.floor((st0/speed)*sr),len=Math.floor((len0/speed)*sr);let ph=0;for(let j=0;j<len&&st+j<n;j++){const q=j/len,t=j/sr,arch=Math.sin(Math.PI*q),f=base+df+55*arch-70*q+5*Math.sin(2*Math.PI*5.3*t)+(R()-.5)*rand*8;ph+=2*Math.PI*f/sr;const env=Math.pow(Math.sin(Math.PI*q),1.1);const breath=(R()*2-1)*.035;const tone=.72*Math.sin(ph)+.20*Math.sin(2*ph+.35)+.08*Math.sin(3*ph+.7);y[st+j]+=(tone+breath)*env*v}}}"""
+          if old not in s:
+              raise SystemExit('target synthesis block not found')
+          s=s.replace(old,new)
+          s=s.replace('defaults={owl:4.2,owl_hoot:4.2,thunder:4.8', 'defaults={ghost_moan:4.2,moan:4.2,owl:3.2,owl_hoot:3.2,thunder:4.8')
+          p.write_text(s)
+
+          sw=Path('service-worker.js')
+          t=sw.read_text()
+          import re
+          t=re.sub(r"const CACHE='soundfac-v\\d+';", "const CACHE='soundfac-v5';", t)
+          sw.write_text(t)
+          PY
+      - name: Commit changes
+        run: |
+          git config user.name "noagrp"
+          git config user.email "actions@users.noreply.github.com"
+          git add index.html service-worker.js
+          git commit -m "Refine breathing and split owl from ghost moan" || exit 0
+          git push
+      - name: Remove workflow
+        run: |
+          git pull --rebase
+          git rm .github/workflows/refine-breathing-owl.yml
+          git commit -m "Remove temporary refinement workflow"
+          git push
