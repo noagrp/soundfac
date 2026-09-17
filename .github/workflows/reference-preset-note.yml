@@ -1,0 +1,42 @@
+name: Add SoundFac Reference Preset
+on:
+  push:
+    paths:
+      - '.github/workflows/reference-preset-note.yml'
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Update presets and notes
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          s=s.replace('"Alien Scanning":{name:"Alien Scanning",duration_seconds:7.5,master:{volume:.9,fade_in:.05,fade_out:.25},layers:[{type:"alien_scan",rate:.72,volume:.48,pitch:680,depth:.78,echo:.08,pan:0,randomness:.08}]}', '"Alien":{name:"Alien",duration_seconds:7.5,master:{volume:.9,fade_in:.05,fade_out:.25},layers:[{type:"alien_scan",rate:.72,volume:.48,pitch:680,depth:.78,echo:.08,pan:0,randomness:.08}]}')
+          marker='"Low Rumble":{name:"Low Rumble",duration_seconds:7,master:{volume:.86,fade_in:.8,fade_out:1},layers:[{type:"rumble",frequency:38,volume:.2,depth:.8,randomness:.08}]},'
+          ref='"Custom — Reference":{name:"Custom Reference",duration_seconds:5,master:{volume:.85,fade_in:.08,fade_out:.25},layers:[{type:"custom",waveform:"saw",frequency:180,end_frequency:720,harmonics:[1,.5,.2],noise_mix:.12,attack:.06,release:.35,tremolo_rate:3.2,tremolo_depth:.18,pulse_rate:2.4,pulse_depth:.2,highpass:80,lowpass:2200,volume:.5,pan:0,echo:.05}]},'
+          if ref not in s:
+              if marker not in s: raise SystemExit('preset marker not found')
+              s=s.replace(marker, marker+'\n'+ref)
+          old_note='All controls are shown. Longer recipes simply extend the page.'
+          new_note='Presets are examples. Select one to see its settings, or open Advanced JSON to copy and change the recipe.'
+          s=s.replace(old_note,new_note)
+          old_hint='Paste any sound recipe. Named sound types are optional: custom and unknown types can use generic waveform, sweep, envelope, filter, pulse, harmonic and noise controls.'
+          new_hint='How to use: choose a preset as a reference, open Advanced JSON, copy or edit it, then Apply JSON. Named types are optional; custom recipes can use waveform, frequency/end_frequency, harmonics, noise_mix, attack/release, tremolo, pulse, highpass/lowpass, volume, pan and echo.'
+          s=s.replace(old_hint,new_hint)
+          p.write_text(s)
+          sw=Path('service-worker.js')
+          w=sw.read_text().replace("const CACHE='soundfac-v10';","const CACHE='soundfac-v11';")
+          sw.write_text(w)
+          PY
+      - name: Commit
+        run: |
+          git config user.name "noagrp"
+          git config user.email "actions@users.noreply.github.com"
+          git add index.html service-worker.js
+          git commit -m "Add SoundFac reference preset and usage note" || exit 0
+          git push
