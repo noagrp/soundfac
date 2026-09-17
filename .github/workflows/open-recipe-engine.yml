@@ -1,0 +1,65 @@
+name: Open SoundFac Recipe Engine
+on:
+  push:
+    paths:
+      - '.github/workflows/open-recipe-engine.yml'
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Add generic synthesis primitives
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+
+          s=s.replace(
+            'Paste a sound recipe. soundfac only interprets supported sound instructions; it does not execute code from JSON.',
+            'Paste any sound recipe. Named sound types are optional: custom and unknown types can use generic waveform, sweep, envelope, filter, pulse, harmonic and noise controls.'
+          )
+
+          s=s.replace(
+            "function synth(def,dur,sr,seed=1){const n=Math.max(1,Math.floor(dur*sr)),y=new Float32Array(n),R=rng(seed),type=(def.type||def.effect||'oscillator').toLowerCase(),v=def.volume??.5,rand=def.randomness??0;",
+            "function genericSynth(def,dur,sr,R){const n=Math.max(1,Math.floor(dur*sr));let out=new Float32Array(n);const v=def.volume??.5,start=def.frequency??def.pitch??440,end=def.end_frequency??def.end_pitch??start,w=def.waveform||'sine',attack=Math.max(0,def.attack??.02),release=Math.max(0,def.release??.08),tremRate=Math.max(0,def.tremolo_rate??0),tremDepth=Math.max(0,Math.min(1,def.tremolo_depth??0)),pulseRate=Math.max(0,def.pulse_rate??0),pulseDepth=Math.max(0,Math.min(1,def.pulse_depth??0));const hs=Array.isArray(def.harmonics)&&def.harmonics.length?def.harmonics:[1],noiseMix=Math.max(0,Math.min(1,def.noise_mix??(((def.type||'').toLowerCase()==='noise')?1:0)));let phases=hs.map(()=>0);const wave=(ph)=>w==='square'?Math.sign(Math.sin(ph)):w==='triangle'?2/Math.PI*Math.asin(Math.sin(ph)):w==='saw'||w==='sawtooth'?2*((ph/(2*Math.PI))-Math.floor(.5+ph/(2*Math.PI))):Math.sin(ph);for(let i=0;i<n;i++){const t=i/sr,q=n>1?i/(n-1):0,f=start+(end-start)*q;let tonal=0,weight=0;for(let h=0;h<hs.length;h++){const amp=+hs[h]||0,partial=h+1;phases[h]+=2*Math.PI*f*partial/sr;tonal+=wave(phases[h])*amp;weight+=Math.abs(amp)}if(weight)tonal/=weight;const noise=(R()*2-1),trem=tremRate?1-tremDepth*.5+tremDepth*.5*Math.sin(2*Math.PI*tremRate*t):1,pulse=pulseRate?1-pulseDepth+pulseDepth*(Math.sin(2*Math.PI*pulseRate*t)>0?1:0):1,a=attack?Math.min(1,t/attack):1,r=release?Math.min(1,(dur-t)/release):1,env=Math.max(0,Math.min(a,r));out[i]=((1-noiseMix)*tonal+noiseMix*noise)*trem*pulse*env*v}if(def.highpass>0)out=hp(out,def.highpass,sr);if(def.lowpass>0)out=lp(out,def.lowpass,sr);return out}\nfunction synth(def,dur,sr,seed=1){const n=Math.max(1,Math.floor(dur*sr)),y=new Float32Array(n),R=rng(seed),type=(def.type||def.effect||'custom').toLowerCase(),v=def.volume??.5,rand=def.randomness??0;"
+          )
+
+          s=s.replace("if(type==='wind'||type==='noise'){", "if(type==='wind'){")
+
+          marker=" else if(type==='ghost_moan'||type==='moan'){"
+          generic=" else if(type==='custom'||type==='tone'||type==='sweep'||type==='oscillator'||type==='noise'){y.set(genericSynth(def,dur,sr,R))}\n"
+          if marker not in s:
+              raise SystemExit('generic insertion point not found')
+          s=s.replace(marker,generic+marker,1)
+
+          old=" else {const f=def.frequency??440,w=def.waveform||'sine';for(let i=0;i<n;i++){const t=i/sr,p=2*Math.PI*f*t;y[i]=(w==='square'?Math.sign(Math.sin(p)):w==='triangle'?2/Math.PI*Math.asin(Math.sin(p)):Math.sin(p))*v}}"
+          new=" else {y.set(genericSynth(def,dur,sr,R))}"
+          if old not in s:
+              raise SystemExit('fallback oscillator block not found')
+          s=s.replace(old,new,1)
+
+          s=s.replace(
+            "breathing:dur-at,oscillator:dur-at",
+            "custom:dur-at,tone:dur-at,sweep:dur-at,noise:dur-at,oscillator:dur-at"
+          )
+          s=s.replace(
+            "alien_scan:dur-at,scanner:dur-at,oscillator:dur-at",
+            "alien_scan:dur-at,scanner:dur-at,custom:dur-at,tone:dur-at,sweep:dur-at,noise:dur-at,oscillator:dur-at"
+          )
+
+          p.write_text(s)
+
+          sw=Path('service-worker.js')
+          w=sw.read_text().replace("const CACHE='soundfac-v9';","const CACHE='soundfac-v10';")
+          sw.write_text(w)
+          PY
+      - name: Commit
+        run: |
+          git config user.name "noagrp"
+          git config user.email "actions@users.noreply.github.com"
+          git add index.html service-worker.js
+          git commit -m "Make SoundFac recipes open with generic synthesis" || exit 0
+          git push
