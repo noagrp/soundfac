@@ -1,0 +1,27 @@
+name: Fix SoundFac Visible Title
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch title and remove workflow
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text().replace('<div class="title">SoundLab</div>','<div class="title">soundfac</div>')
+          p.write_text(s)
+          PY
+          rm -f .github/workflows/fix-soundfac-title.yml
+      - name: Commit
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -A
+          git commit -m "Use SoundFac visible title" || exit 0
+          git push
