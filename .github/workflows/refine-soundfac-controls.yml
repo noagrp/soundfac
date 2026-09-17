@@ -1,0 +1,32 @@
+name: Refine SoundFac Controls
+on:
+  push:
+    paths:
+      - '.github/workflows/refine-soundfac-controls.yml'
+permissions:
+  contents: write
+jobs:
+  refine:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Update controls and preset isolation
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          s=s.replace('.controls{display:flex;flex-direction:column;gap:8px;max-height:64vh;overflow:auto;padding-right:4px}', '.controls{display:flex;flex-direction:column;gap:8px;width:100%;max-height:64vh;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scrollbar-gutter:stable;padding-right:8px;min-width:0}')
+          s=s.replace('@media(max-width:820px){.app{padding:12px}.grid{grid-template-columns:1fr}.top{align-items:flex-start}.status{display:none}.controls{max-height:none}', '@media(max-width:820px){.app{padding:12px}.grid{grid-template-columns:1fr}.top{align-items:flex-start}.status{display:none}.controls{max-height:54vh;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}')
+          s=s.replace('"Heartbeat — Close":{name:"Close Heartbeat",duration_seconds:8,master:{volume:.85,fade_in:.4,fade_out:.7},layers:[{type:"heartbeat",bpm:44,volume:.48,depth:.82,randomness:.08},{type:"breathing",rate:.14,volume:.10,darkness:.7}]}', '"Heartbeat — Close":{name:"Close Heartbeat",duration_seconds:8,master:{volume:.85,fade_in:.25,fade_out:.5},layers:[{type:"heartbeat",bpm:44,volume:.58,depth:.9,randomness:.08}]}')
+          s=s.replace('"Breathing — Distant":{name:"Distant Breathing",duration_seconds:8,master:{volume:.9,fade_in:.7,fade_out:1},layers:[{type:"breathing",rate:.12,volume:.25,darkness:.75,echo:.12,pan:0,randomness:.16},{type:"rumble",frequency:32,volume:.05}]}', '"Breathing — Distant":{name:"Distant Breathing",duration_seconds:8,master:{volume:.9,fade_in:.5,fade_out:.8},layers:[{type:"breathing",rate:.12,volume:.32,darkness:.75,echo:.05,pan:0,randomness:.16}]}')
+          s=s.replace('"Thunder — Distant":{name:"Distant Thunder",duration_seconds:8,master:{volume:.82,fade_in:.4,fade_out:1.2},layers:[{type:"wind",volume:.14,darkness:.7,gust_speed:.08},{type:"thunder",start:2.2,volume:.58,depth:.8,echo:.16}]}', '"Thunder — Distant":{name:"Distant Thunder",duration_seconds:8,master:{volume:.86,fade_in:.05,fade_out:.8},layers:[{type:"thunder",start:1.5,volume:.72,depth:.9,echo:.08}]}')
+          p.write_text(s)
+          PY
+      - name: Commit
+        run: |
+          git config user.name "noagrp"
+          git config user.email "actions@users.noreply.github.com"
+          git add index.html
+          git commit -m "Improve SoundFac controls and preset isolation" || exit 0
+          git push
